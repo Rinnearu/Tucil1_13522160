@@ -5,19 +5,18 @@
 # print("hello")
 # print(__name__)
 
-import random
+# list1 = [1, 2, 3, 4, 5]
+# list2 = [3, 4]
+# if any(list2 == list1[i:i+len(list2)] for i in range(len(list1) - len(list2) + 1)):
+#     print("Yes, {} is a subsequence of {}.".format(list2, list1))
+# else:
+#     print("No, {} is not a subsequence of {}.".format(list2, list1))
 
-my_set = {1, 2, 3, 4, 5}
+buffer_sequence = [1, 2, 3]
+checked_sequence = buffer_sequence
 
-# Specify the number of elements to select
-n = 10
-oberall = []
+# Modify checked_sequence
+checked_sequence[0] = 100
 
-# Select random elements from the set with replacement
-for _ in range(n):
-    random_element = random.choice(list(my_set))
-    oberall.append(random_element)
-
-    print(random_element)
-
-print(oberall)
+print(buffer_sequence)   # Output: [100, 2, 3]
+print(checked_sequence)  # Output: [100, 2, 3]
