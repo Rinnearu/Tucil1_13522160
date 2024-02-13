@@ -49,13 +49,6 @@ class Sequence:
             new_seq = random.choices(tokens, k = token_numbers)
             points = random.randint(0,max_points)
             self.add_sequence(new_seq,points)
-
-    def most_points(self):
-        optimal = 0
-        for i in self.sequence_points:
-            if i > 0:
-                optimal += i
-        return optimal
     
     def print_sequence(self):
         for i in range(self.sequence_number):
