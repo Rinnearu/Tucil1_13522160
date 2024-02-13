@@ -50,20 +50,45 @@ class Sequence:
             points = random.randint(0,max_points)
             self.add_sequence(new_seq,points)
 
-    def optimal_points(self):
+    def most_points(self):
         optimal = 0
         for i in self.sequence_points:
             if i > 0:
                 optimal += i
         return optimal
+    
+    def print_sequence(self):
+        for i in range(self.sequence_number):
+            for cseq in self.sequence_list[i]:
+                print(cseq, end=" ")
+            print(":",self.sequence_points[i],"points")
 
 class Buffer:
     def __init__(self) -> None:
         self.buffer_size = 0
-        self.buffer_coordinates = []                # ada dalam (row,col) | 0..len-1
+        self.buffer_coordinates = []
         self.buffer_sequence = []
         self.buffer_points = 0
         self.buffer_used = 0
+
+    def append_el(self,el,iRow,iCol):
+        self.buffer_coordinates.append((iRow,iCol))
+        self.buffer_sequence.append(el)
+        self.buffer_used += 1
+
+    def pop_last(self):
+        self.buffer_coordinates.pop()
+        self.buffer_sequence.pop()
+        if self.buffer_used > 0:
+            self.buffer_used -= 1
+
+    def print_buffer(self):
+        for token in self.buffer_sequence:
+            print(token, end=" ")
+        print(":",self.buffer_points,"points")
+        print("Coordinates")
+        for coord in self.buffer_coordinates:
+            print(f"({coord[1] + 1}, {coord[0] + 1})")
 
 def external_fileI(buffer,matrix,sequence):
     file_name = input("Enter the name of file being tested : ")
@@ -138,7 +163,7 @@ def writeoutput(buffer,searchtime,filepath):
                 line = line + " "
             else:
                 line = line + "\n"
-        wfile.write(line)                           # asumsi jika tidak ada sequence, line kosong untuk file output. Untuk koordinat jika kosong sama seperti biasa (1 line kosong sebelum waktu)
+        wfile.write(line)
 
         for i in range(buffer.buffer_used):
             line = str(buffer.buffer_coordinates[i][1] + 1) + ", " + str(buffer.buffer_coordinates[i][0] + 1) + "\n"
@@ -147,8 +172,28 @@ def writeoutput(buffer,searchtime,filepath):
         line = "\n" + str(searchtime) + " ms"
         wfile.write(line)
 
-def breachprotocol():
-    pass
+def breachprotocol(buffer, matrix, sequence, iRow, iCol, optimalBuffer):
+    breachMatrix = matrix.matrix
+    if not (iRow,iCol) in buffer.buffer_coordinates:
+        buffer.append_el(breachMatrix[iRow][iCol],iRow,iCol)
+
+    loop = 0
+
+    newRow = (iRow + buffer.buffer_used % 2) % matrix.row
+    newCol = (iCol + (buffer.buffer_used + 1) % 2) % matrix.col
+
+    while buffer.buffer_used < buffer.buffer_size and (newRow != iRow or newCol != iCol):
+        if not (newRow,newCol) in buffer.buffer_coordinates:
+            breachprotocol(buffer, matrix, sequence, newRow, newCol, optimalBuffer)
+            loop += 1
+
+        newRow = (newRow + buffer.buffer_used % 2) % matrix.row
+        newCol = (newCol + (buffer.buffer_used + 1) % 2) % matrix.col
+
+    if loop == 0:
+        sequence_search(buffer, sequence, optimalBuffer)
+    
+    buffer.pop_last()
 
 def sequence_search(buffer, sequence, optimalBuffer):
     checked_sequence = buffer.buffer_sequence
@@ -173,8 +218,8 @@ def sequence_search(buffer, sequence, optimalBuffer):
                 used_size = j + seqt_len
     
     if total_points > optimalBuffer.buffer_points or (total_points == optimalBuffer.buffer_points and used_size < optimalBuffer.buffer_used):
-        optimalBuffer.buffer_sequence = checked_sequence[:]
-        optimalBuffer.buffer_coordinates = buffer.buffer_coordinates[:]
+        optimalBuffer.buffer_sequence = checked_sequence[:used_size]
+        optimalBuffer.buffer_coordinates = buffer.buffer_coordinates[:used_size]
         optimalBuffer.buffer_points = total_points
         optimalBuffer.buffer_used = used_size
 
@@ -205,25 +250,24 @@ def main():
 
         starttime = time()
 
-        # Evaluation code here
+        for i in range(BPmatrix.col):
+            breachprotocol(buffer, BPmatrix, sequence, 0, i, optimal_buffer)
 
-        buffer.buffer_sequence = ["7A","BD","7A","BD","1C","BD","55"]
-
-        buffer.buffer_coordinates = [(0,0),(3,0),(3,2),(4,2),(4,5),(3,5),(3,4)]
-
-        sequence_search(buffer, sequence, optimal_buffer)
 
         endtime = time()
 
         time_used = round((endtime - starttime) * 1000)
 
+        print("Below is the matrix!")
         BPmatrix.print_matrix()
-        print(sequence.sequence_list)
-        print(sequence.sequence_points)
-        print(optimal_buffer.buffer_sequence)
-        print(optimal_buffer.buffer_coordinates)
+
+        print("\nBelow are the sequences!")
+        sequence.print_sequence()
+
+        print("\nBelow is the most optimal buffer found!")
+        optimal_buffer.print_buffer()
+
         print()
-        print(endtime - starttime)
         print(time_used, "ms")
         print()
 
@@ -248,6 +292,8 @@ def main():
 
     except Exception as e:
         print("An error occurred:", e)
+
+    print("\nExitting program . . .")
 
 if __name__ == '__main__':
     main()
